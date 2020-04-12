@@ -135,7 +135,7 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
 
   Widget selectField(Map<String, dynamic> inputDefinition) {
     List<DropdownMenuItem<String>> castItems = [];
-    if(inputDefinition['items'] is Map) {
+    if (inputDefinition['items'] is Map) {
       //print('Type: map');
       var items = Map<dynamic, dynamic>.from(inputDefinition['items']);
 
@@ -145,7 +145,7 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
           child: Text(v),
         ));
       });
-    }else{
+    } else {
       //print('Type: list');
       var items = List.from(inputDefinition['items']);
       items.forEach((v) {

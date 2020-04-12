@@ -13,7 +13,7 @@
 
 ```
 dependencies:
-  json_form_generator: "^0.0.1"
+  json_form_generator: any
 ```
 
 - You can install packages from the command line:
@@ -121,7 +121,7 @@ maxLines is set to 10.0
              'title': 'phone',
              'label': 'Phone number',
              'required': 'no'
-        },
+        }
     ]
  );
 
@@ -138,7 +138,7 @@ maxLines is set to 10.0
             "type": "date",
             "required": "no"
 
-        },
+        }
     ]);
 ```
 
@@ -149,12 +149,20 @@ maxLines is set to 10.0
         {
 
         "title": "agegroup",
-        "label": "tell us your age group",
+        "label": "Tell us your age group",
         "type": "select",
         "items": ["1-20", "21-30", "31-40", "41-50", "51-60"],
         "required": "no"
 
-    }
+        },
+        {
+
+            "title": "category",
+            "label": "Pick a category",
+            "type": "select",
+            "items": {"category1":"Cats", "category2":"Dogs", "category3":"Other animals"},
+            "required": "no"
+        }
     ]);
 
 ```
@@ -177,7 +185,7 @@ maxLines is set to 10.0
 
 ```
  String formString = json.encode([
-        {
+    {
       'title': 'canCode',
       'type': 'switch',
       'label': 'Are you old enough to code',
