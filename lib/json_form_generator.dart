@@ -30,14 +30,6 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
 
   final Map<String, dynamic> formResults = {};
 
-  Map<String, dynamic> values = {};
-
-  void updateSwitchValue(dynamic item, bool value) {
-    setState(() {
-      values[item] = value;
-    });
-  }
-
   List<Widget> jsonToForm() {
     List<Widget> listWidget = new List<Widget>();
 
@@ -80,7 +72,7 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
     );
   }
 
-  Widget dateField(itemDefinition) {
+  Widget dateField(inputDefinition) {
     Future _selectDate() async {
       DateTime picked = await showDatePicker(
         context: context,
@@ -95,9 +87,8 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
         },
       );
       if (picked != null)
-        setState(() => values[itemDefinition["title"]] =
+        setState(() => formResults[inputDefinition["title"]] =
             picked.toString().substring(0, 10));
-      //print(valueMap[itemDefinition['title']]);
     }
 
     return Container(
@@ -105,25 +96,21 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
         child: TextFormField(
           autofocus: false,
           readOnly: true,
-          controller:
-              TextEditingController(text: values[itemDefinition["title"]]),
+          controller: TextEditingController(
+              text: formResults[inputDefinition["title"]]),
           validator: (String value) {
             if (value.isEmpty) {
-              return 'Please  cannot be empty';
+              return 'Please  ${inputDefinition['title']} cannot be empty';
             }
             return null;
           },
-          onChanged: (String value) {
-            //print("object");
-          },
+          onChanged: (String value) {},
           onTap: () async {
             await _selectDate();
-            formResults[itemDefinition["title"]] =
-                values[itemDefinition["title"]].trim();
           },
           decoration: InputDecoration(
             contentPadding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-            labelText: itemDefinition["label"],
+            labelText: inputDefinition["label"],
             border:
                 OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
             suffixIcon: Icon(
@@ -136,7 +123,6 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
   Widget selectField(Map<String, dynamic> inputDefinition) {
     List<DropdownMenuItem<String>> castItems = [];
     if (inputDefinition['items'] is Map) {
-      //print('Type: map');
       var items = Map<dynamic, dynamic>.from(inputDefinition['items']);
 
       items.forEach((k, v) {
@@ -146,7 +132,6 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
         ));
       });
     } else {
-      //print('Type: list');
       var items = List.from(inputDefinition['items']);
       items.forEach((v) {
         castItems.add(DropdownMenuItem<String>(
@@ -174,13 +159,11 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
             }
             return null;
           },
-          value: values[inputDefinition["title"]],
+          value: formResults[inputDefinition["title"]],
           isExpanded: true,
           style: Theme.of(context).textTheme.subhead,
           onChanged: (String newValue) {
-            //print("New value: " + newValue);
             setState(() {
-              values[inputDefinition["title"]] = newValue;
               formResults[inputDefinition["title"]] = newValue;
               _handleChanged();
             });
@@ -224,10 +207,10 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
   }
 
   List<Widget> radioField(inputDefinition) {
-    values["${inputDefinition["title"]}"] =
-        values["${inputDefinition["title"]}"] == null
-            ? 'lost'
-            : values["${inputDefinition["title"]}"];
+    formResults["${inputDefinition["title"]}"] =
+        formResults["${inputDefinition["title"]}"] == null
+            ? ''
+            : formResults["${inputDefinition["title"]}"];
     List<Widget> radioList = [];
     radioList.add(new Container(
         margin: new EdgeInsets.only(top: 5.0, bottom: 5.0),
@@ -243,13 +226,11 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
             new Radio<dynamic>(
                 hoverColor: Colors.red,
                 value: inputDefinition['items'][i],
-                groupValue: values["${inputDefinition["title"]}"],
+                groupValue: formResults["${inputDefinition["title"]}"],
                 onChanged: (dynamic value) {
-                  //print(value);
                   setState(() {
-                    values["${inputDefinition["title"]}"] = value;
+                    formResults[inputDefinition["title"]] = value;
                   });
-                  formResults[inputDefinition["title"]] = value;
 
                   _handleChanged();
                 })
@@ -261,21 +242,21 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
   }
 
   Widget switchField(inputDefinition) {
-    if (values["${inputDefinition["title"]}"] == null) {
-      formResults[inputDefinition["title"]] = false;
+    if (formResults["${inputDefinition["title"]}"] == null) {
       setState(() {
-        values["${inputDefinition["title"]}"] = false;
+        formResults["${inputDefinition["title"]}"] = false;
       });
     }
     return Row(
       children: <Widget>[
         new Expanded(child: new Text(inputDefinition["label"])),
         Switch(
-            value: values["${inputDefinition["title"]}"],
+            value: formResults[inputDefinition["title"]],
             onChanged: (bool value) {
-              updateSwitchValue(inputDefinition["title"], value);
-              formResults[inputDefinition["title"]] = value;
-              _handleChanged();
+              setState(() {
+                formResults[inputDefinition["title"]] = value;
+                _handleChanged();
+              });
             }),
       ],
     );
@@ -285,7 +266,6 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
     List<Widget> checkboxList = [];
 
     if (!formResults.containsKey(inputDefinition["title"])) {
-      print('defining new key: ' + inputDefinition["title"]);
       setState(() {
         formResults[inputDefinition["title"]] = new Map<String, bool>();
       });
