@@ -194,6 +194,28 @@ maxLines is set to 10.0
 
 ```
 
+### checkbox
+
+```
+ String formString = json.encode([
+    {
+      "title": "checkboxes",
+      "label": "Programming languages",
+      "type": "checkbox",
+      "items": ["Dart", "PHP", "JAVA", "RUBY", "JS"],
+      "required": "no"
+    },
+        {
+      "title": "checkboxesWithDefinedKeys",
+      "label": "Programming skills",
+      "type": "checkbox",
+      "items": {"web":"PHP,JS,HTML,CSS", "compiled":"JAVA,C,C#", "esoteric":"Brainf*ck, LOLCODE, Whitespace"},
+      "required": "no"
+    }
+    ]);
+
+```
+
 ## Usage
 
 - Example
@@ -306,4 +328,5 @@ For help on editing package code, view the [documentation](https://flutter.io/de
 
 ## TODO
 
-- Add checkbox
+- Refactor code to more object oriented approach
+- Add option for json-defined styling

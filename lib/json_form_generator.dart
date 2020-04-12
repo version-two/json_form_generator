@@ -30,14 +30,11 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
 
   final Map<String, dynamic> formResults = {};
 
-  Map<String, dynamic> radioValueMap = {};
-  Map<String, dynamic> dropDownMap = {};
-  Map<String, String> _dateValueMap = {};
-  Map<String, bool> switchValueMap = {};
+  Map<String, dynamic> values = {};
 
   void updateSwitchValue(dynamic item, bool value) {
     setState(() {
-      switchValueMap[item] = value;
+      values[item] = value;
     });
   }
 
@@ -57,6 +54,9 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
           break;
         case 'radio':
           listWidget.addAll(radioField(item));
+          break;
+        case 'checkbox':
+          listWidget.addAll(checkboxField(item));
           break;
         case 'switch':
           listWidget.add(switchField(item));
@@ -95,9 +95,9 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
         },
       );
       if (picked != null)
-        setState(() => _dateValueMap[itemDefinition["title"]] =
+        setState(() => values[itemDefinition["title"]] =
             picked.toString().substring(0, 10));
-      //print(_dateValueMap[itemDefinition['title']]);
+      //print(valueMap[itemDefinition['title']]);
     }
 
     return Container(
@@ -105,8 +105,8 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
         child: TextFormField(
           autofocus: false,
           readOnly: true,
-          controller: TextEditingController(
-              text: _dateValueMap[itemDefinition["title"]]),
+          controller:
+              TextEditingController(text: values[itemDefinition["title"]]),
           validator: (String value) {
             if (value.isEmpty) {
               return 'Please  cannot be empty';
@@ -119,7 +119,7 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
           onTap: () async {
             await _selectDate();
             formResults[itemDefinition["title"]] =
-                _dateValueMap[itemDefinition["title"]].trim();
+                values[itemDefinition["title"]].trim();
           },
           decoration: InputDecoration(
             contentPadding: EdgeInsets.fromLTRB(10, 0, 10, 0),
@@ -174,13 +174,13 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
             }
             return null;
           },
-          value: dropDownMap[inputDefinition["title"]],
+          value: values[inputDefinition["title"]],
           isExpanded: true,
           style: Theme.of(context).textTheme.subhead,
           onChanged: (String newValue) {
             //print("New value: " + newValue);
             setState(() {
-              dropDownMap[inputDefinition["title"]] = newValue;
+              values[inputDefinition["title"]] = newValue;
               formResults[inputDefinition["title"]] = newValue;
               _handleChanged();
             });
@@ -223,33 +223,33 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
     );
   }
 
-  List<Widget> radioField(item) {
-    radioValueMap["${item["title"]}"] =
-        radioValueMap["${item["title"]}"] == null
+  List<Widget> radioField(inputDefinition) {
+    values["${inputDefinition["title"]}"] =
+        values["${inputDefinition["title"]}"] == null
             ? 'lost'
-            : radioValueMap["${item["title"]}"];
-    List<Widget> radioList;
+            : values["${inputDefinition["title"]}"];
+    List<Widget> radioList = [];
     radioList.add(new Container(
         margin: new EdgeInsets.only(top: 5.0, bottom: 5.0),
-        child: new Text(item['label'],
+        child: new Text(inputDefinition['label'],
             style:
                 new TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0))));
 
-    for (var i = 0; i < item['items'].length; i++) {
+    for (var i = 0; i < inputDefinition['items'].length; i++) {
       radioList.add(
         new Row(
           children: <Widget>[
-            new Expanded(child: new Text(item['items'][i])),
+            new Expanded(child: new Text(inputDefinition['items'][i])),
             new Radio<dynamic>(
                 hoverColor: Colors.red,
-                value: item['items'][i],
-                groupValue: radioValueMap["${item["title"]}"],
+                value: inputDefinition['items'][i],
+                groupValue: values["${inputDefinition["title"]}"],
                 onChanged: (dynamic value) {
-                  print(value);
+                  //print(value);
                   setState(() {
-                    radioValueMap["${item["title"]}"] = value;
+                    values["${inputDefinition["title"]}"] = value;
                   });
-                  formResults[item["title"]] = value;
+                  formResults[inputDefinition["title"]] = value;
 
                   _handleChanged();
                 })
@@ -260,24 +260,76 @@ class _JsonFormGeneratorState extends State<JsonFormGenerator> {
     return radioList;
   }
 
-  Widget switchField(item) {
-    if (switchValueMap["${item["title"]}"] == null) {
-      formResults[item["title"]] = false;
+  Widget switchField(inputDefinition) {
+    if (values["${inputDefinition["title"]}"] == null) {
+      formResults[inputDefinition["title"]] = false;
       setState(() {
-        switchValueMap["${item["title"]}"] = false;
+        values["${inputDefinition["title"]}"] = false;
       });
     }
     return Row(
       children: <Widget>[
-        new Expanded(child: new Text(item["label"])),
+        new Expanded(child: new Text(inputDefinition["label"])),
         Switch(
-            value: switchValueMap["${item["title"]}"],
+            value: values["${inputDefinition["title"]}"],
             onChanged: (bool value) {
-              updateSwitchValue(item["title"], value);
-              formResults[item["title"]] = value;
+              updateSwitchValue(inputDefinition["title"], value);
+              formResults[inputDefinition["title"]] = value;
               _handleChanged();
             }),
       ],
     );
+  }
+
+  Iterable<Widget> checkboxField(inputDefinition) {
+    List<Widget> checkboxList = [];
+
+    if (!formResults.containsKey(inputDefinition["title"])) {
+      print('defining new key: ' + inputDefinition["title"]);
+      setState(() {
+        formResults[inputDefinition["title"]] = new Map<String, bool>();
+      });
+    }
+
+    checkboxList.add(new Container(
+        margin: new EdgeInsets.only(top: 5.0, bottom: 5.0),
+        child: new Text(inputDefinition['label'],
+            style:
+                new TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0))));
+
+    if (inputDefinition['items'] is Map) {
+      var items = Map<dynamic, dynamic>.from(inputDefinition['items']);
+
+      items.forEach((k, v) {
+        checkboxList.add(CheckboxListTile(
+          title: Text(v),
+          value: formResults[inputDefinition["title"]][k.toString()] ?? false,
+          onChanged: (newValue) {
+            setState(() {
+              formResults[inputDefinition["title"]][k.toString()] = newValue;
+              _handleChanged();
+            });
+          },
+          //controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
+        ));
+      });
+    } else {
+      var items = List.from(inputDefinition['items']);
+      items.forEach((v) {
+        checkboxList.add(CheckboxListTile(
+          title: Text(v),
+          value: formResults[inputDefinition["title"]][v.toString()] ?? false,
+          onChanged: (newValue) {
+            setState(() {
+              formResults[inputDefinition["title"]][v.toString()] = newValue;
+              _handleChanged();
+            });
+          },
+          //controlAffinity: ListTileControlAffinity.leading, //  <-- leading Checkbox
+        ));
+      });
+    }
+
+    return checkboxList;
   }
 }
